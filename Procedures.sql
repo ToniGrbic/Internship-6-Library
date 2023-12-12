@@ -21,3 +21,45 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE UpdateFineIfReturnDateExpired(book_loan_id INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    book_id INT;
+    return_date DATE;
+    current_date DATE := CURRENT_DATE;
+    genre VARCHAR(50);
+    fine INT := 0;
+    days INT;
+BEGIN
+    SELECT BookID, ReturnDate, Genre INTO book_id, return_date, genre FROM BookLoans WHERE BookLoanID = book_loan_id;
+
+    IF return_date >= current_date THEN
+        RETURN;
+    END IF;
+
+    days := current_date - return_date;
+
+    FOR i IN 1..days LOOP
+        IF EXTRACT(MONTH FROM return_date + i) BETWEEN 6 AND 9 THEN
+            IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
+                fine := fine + 30;
+            ELSE
+                fine := fine + 20;
+            END IF;
+        ELSE
+            IF genre = 'lektira' THEN
+                fine := fine + 50;
+            ELSE
+                IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
+                    fine := fine + 40;
+                ELSE
+                    fine := fine + 20;
+                END IF;
+            END IF;
+        END IF;
+    END LOOP;
+
+    UPDATE BookLoans SET CostOfFine = fine WHERE BookLoanID = book_loan_id;
+END;
+$$;
