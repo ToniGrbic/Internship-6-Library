@@ -47,9 +47,9 @@ CREATE TABLE Books (
     BookID SERIAL NOT NULL PRIMARY KEY,
     Title VARCHAR(50) NOT NULL,
     Genre VARCHAR(50) NOT NULL,
-    Author VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
     PublishDate DATE NOT NULL,
+    AuthorID INT REFERENCES Authors(AuthorID),
     LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
