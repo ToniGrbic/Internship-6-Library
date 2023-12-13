@@ -3,6 +3,7 @@ CREATE TABLE WorkingHours (
     DayOfWeek INT NOT NULL,
     OpenTime TIME NOT NULL,
     CloseTime TIME NOT NULL
+    LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
 ALTER TABLE WorkingHours
@@ -12,7 +13,6 @@ ALTER TABLE WorkingHours
 CREATE TABLE Libraries (
     LibraryID SERIAL NOT NULL PRIMARY KEY,
     LibraryName VARCHAR(50) NOT NULL,
-    WorkingHoursID INT REFERENCES WorkingHours(WorkingHoursID)
 );
 
 CREATE TABLE Librarians (
