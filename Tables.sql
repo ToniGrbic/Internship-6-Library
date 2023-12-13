@@ -1,9 +1,3 @@
-CREATE TABLE Libraries (
-    LibraryID SERIAL NOT NULL PRIMARY KEY,
-    LibraryName VARCHAR(50) NOT NULL,
-    WorkingHoursID INT REFERENCES WorkingHours(WorkingHoursID)
-);
-
 CREATE TABLE WorkingHours (
     WorkingHoursID SERIAL NOT NULL PRIMARY KEY,
     DayOfWeek INT NOT NULL,
@@ -15,11 +9,24 @@ ALTER TABLE WorkingHours
     ADD CONSTRAINT CHK_DayOfWeek 
     CHECK (DayOfWeek BETWEEN 1 AND 7);
 
+CREATE TABLE Libraries (
+    LibraryID SERIAL NOT NULL PRIMARY KEY,
+    LibraryName VARCHAR(50) NOT NULL,
+    WorkingHoursID INT REFERENCES WorkingHours(WorkingHoursID)
+);
+
 CREATE TABLE Librarians (
     LibrarianID SERIAL NOT NULL PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
-    LibraryID INT REFERENCES Library(LibraryID)
+    LibraryID INT REFERENCES Libraries(LibraryID)
+);
+
+CREATE TABLE Countries (
+    CountryID SERIAL NOT NULL PRIMARY KEY,
+    CountryName VARCHAR(50) NOT NULL,
+    Population INT NOT NULL,
+    AverageSalary INT NOT NULL
 );
 
 CREATE TABLE Authors (
@@ -29,18 +36,12 @@ CREATE TABLE Authors (
     DateOfBirth DATE NOT NULL,
     IsAlive BOOLEAN NOT NULL,
     Gender VARCHAR(50) NOT NULL,
-    CountryID INT REFERENCES Country(CountryID) 
+    CountryID INT REFERENCES Countries(CountryID) 
 );
 
-ADD CONSTRAINT CHK_Gender CHECK
-(Gender IN ('MUŠKI', 'ŽENSKI', 'NEPOZNATO', 'OSTALO'));
-
-CREATE TABLE Countries (
-    CountryID SERIAL NOT NULL PRIMARY KEY,
-    CountryName VARCHAR(50) NOT NULL,
-    Population INT NOT NULL,
-    AverageSalary INT NOT NULL
-);
+ALTER TABLE Authors
+    ADD CONSTRAINT CHK_Gender CHECK
+    (Gender IN ('MUŠKI', 'ŽENSKI', 'NEPOZNATO', 'OSTALO'));
 
 CREATE TABLE Books (
     BookID SERIAL NOT NULL PRIMARY KEY,
@@ -49,7 +50,7 @@ CREATE TABLE Books (
     Author VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
     LibraryID INT NOT NULL,
-    FOREIGN KEY (LibraryID) REFERENCES Library(LibraryID)
+    FOREIGN KEY (LibraryID) REFERENCES Libraries(LibraryID)
 );
 
 ALTER TABLE Books
@@ -59,12 +60,13 @@ ALTER TABLE Books
 
 CREATE TABLE BookAuthors (
     AuthorType VARCHAR(50) NOT NULL,
-    BookID INT REFERENCES Book(BookID),
-    AuthorID INT REFERENCES Author(AuthorID)
+    BookID INT REFERENCES Books(BookID),
+    AuthorID INT REFERENCES Authors(AuthorID),
     PRIMARY KEY (BookID, AuthorID)
 );
 
-ALTER TABLE ADD CONSTRAINT CHK_AuthorType CHECK 
+ALTER TABLE BookAuthors
+    ADD CONSTRAINT CHK_AuthorType CHECK 
     (AuthorType IN 
     ('glavni', 'sporedni'));
 
@@ -72,18 +74,18 @@ CREATE TABLE Users (
     UserID SERIAL NOT NULL PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL
-)
+);
 
 CREATE TABLE BookLoans (
     BookLoanID SERIAL NOT NULL PRIMARY KEY,
     LoanDate DATE NOT NULL,
     ReturnDate DATE NOT NULL,
-    BookID INT REFERENCES Book(BookID),
-    UserID INT REFERENCES User(UserID),
+    BookID INT REFERENCES Books(BookID),
+    UserID INT REFERENCES Users(UserID),
     IsExtendedLoan BOOLEAN NOT NULL,
     IsReturned BOOLEAN NOT NULL,
     CostOfFine INT NOT NULL
-)
+);
 
 
 
