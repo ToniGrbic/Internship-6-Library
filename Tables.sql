@@ -49,8 +49,8 @@ CREATE TABLE Books (
     Genre VARCHAR(50) NOT NULL,
     Author VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
-    LibraryID INT NOT NULL,
-    FOREIGN KEY (LibraryID) REFERENCES Libraries(LibraryID)
+    PublishDate DATE NOT NULL,
+    LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
 ALTER TABLE Books
