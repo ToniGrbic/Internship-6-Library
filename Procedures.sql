@@ -40,20 +40,20 @@ BEGIN
     days := current_date - return_date;
 
     FOR i IN 1..days LOOP
-        IF EXTRACT(MONTH FROM return_date + i) BETWEEN 6 AND 9 THEN
-            IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
-                fine := fine + 30;
+        IF EXTRACT(MONTH FROM return_date + i) BETWEEN 6 AND 9 THEN --ljeto
+            IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN 
+                fine := fine + 30; --radni dani
             ELSE
-                fine := fine + 20;
+                fine := fine + 20; --vikend
             END IF;
-        ELSE
+        ELSE -- ostatak godine
             IF genre = 'lektira' THEN
                 fine := fine + 50;
             ELSE
                 IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
-                    fine := fine + 40;
+                    fine := fine + 40; -- radni dani
                 ELSE
-                    fine := fine + 20;
+                    fine := fine + 20; -- vikend
                 END IF;
             END IF;
         END IF;
