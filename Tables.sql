@@ -12,7 +12,7 @@ ALTER TABLE WorkingHours
 
 CREATE TABLE Libraries (
     LibraryID SERIAL NOT NULL PRIMARY KEY,
-    LibraryName VARCHAR(50) NOT NULL,
+    LibraryName VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Librarians (
@@ -49,7 +49,6 @@ CREATE TABLE Books (
     Genre VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
     PublishDate DATE NOT NULL,
-    AuthorID INT REFERENCES Authors(AuthorID),
     LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
