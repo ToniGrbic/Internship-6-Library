@@ -11,6 +11,10 @@ CREATE TABLE WorkingHours (
     CloseTime TIME NOT NULL
 );
 
+ALTER TABLE WorkingHours
+    ADD CONSTRAINT CHK_DayOfWeek 
+    CHECK (DayOfWeek BETWEEN 1 AND 7);
+
 CREATE TABLE Librarians (
     LibrarianID SERIAL NOT NULL PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
@@ -80,3 +84,6 @@ CREATE TABLE BookLoans (
     IsReturned BOOLEAN NOT NULL,
     CostOfFine INT NOT NULL
 )
+
+
+
