@@ -21,8 +21,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE UpdateFineIfReturnDateExpired(book_loan_id INT)
-LANGUAGE plpgsql
+CREATE OR REPLACE PROCEDURE CheckLoanExpiryAndUpdateFine(book_loan_id INT)
 AS $$
 DECLARE
     book_id INT;
