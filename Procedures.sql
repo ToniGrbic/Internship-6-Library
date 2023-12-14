@@ -1,3 +1,4 @@
+--PROCEDURA ZA POSUDBU KNJIGE
 CREATE OR REPLACE PROCEDURE BorrowBook(book_id INT, user_id INT)
 LANGUAGE plpgsql
 AS $$
@@ -21,7 +22,9 @@ BEGIN
 END;
 $$;
 
+--PROCEDURA KOJA AŽURIRA CIJENU KAŠNJENJA ZA ODREĐENU POSUDBU
 CREATE OR REPLACE PROCEDURE CheckLoanExpiryAndUpdateFine(book_loan_id INT)
+LANGUAGE plpgsql
 AS $$
 DECLARE
     book_id INT;
@@ -62,3 +65,20 @@ BEGIN
     UPDATE BookLoans SET CostOfFine = fine WHERE BookLoanID = book_loan_id;
 END;
 $$;
+
+--PROCEDURA ZA PRODUŽENJE POSUDBE
+CREATE OR REPLACE PROCEDURE ExtendLoan(book_loan_id INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    return_date DATE;
+    current_date DATE := CURRENT_DATE;
+BEGIN
+    SELECT ReturnDate INTO return_date FROM BookLoans WHERE BookLoanID = book_loan_id;
+
+    IF return_date < current_date THEN
+        RAISE EXCEPTION 'Loan has expired';
+    END IF;
+
+    UPDATE BookLoans SET ReturnDate = return_date + INTERVAL '40 days', IsExtendedLoan = true WHERE BookLoanID = book_loan_id;
+END;
