@@ -41,7 +41,7 @@ CREATE TABLE Authors (
 
 ALTER TABLE Authors
     ADD CONSTRAINT CHK_Gender CHECK
-    (Gender IN ('MUŠKI', 'ŽENSKI', 'NEPOZNATO', 'OSTALO'));
+    (Gender IN ('MUŠKO', 'ŽENSKO', 'NEPOZNATO', 'OSTALO'));
 
 CREATE TABLE Books (
     BookID SERIAL NOT NULL PRIMARY KEY,
@@ -83,8 +83,12 @@ CREATE TABLE BookLoans (
     UserID INT REFERENCES Users(UserID),
     IsExtendedLoan BOOLEAN NOT NULL,
     IsReturned BOOLEAN NOT NULL,
-    CostOfFine INT NOT NULL
+    CostOfFine FLOAT NOT NULL
 );
+
+ALTER TABLE BookLoans
+ADD CONSTRAINT CHK_Loan_Return_Date 
+CHECK (ReturnDate >= LoanDate);
 
 
 
