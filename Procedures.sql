@@ -31,7 +31,7 @@ DECLARE
     return_date DATE;
     current_date DATE := CURRENT_DATE;
     genre VARCHAR(50);
-    fine INT := 0;
+    fine REAL := 0;
     days INT;
 BEGIN
     SELECT BookID, ReturnDate, Genre INTO book_id, return_date, genre FROM BookLoans WHERE BookLoanID = book_loan_id;
@@ -45,18 +45,18 @@ BEGIN
     FOR i IN 1..days LOOP
         IF EXTRACT(MONTH FROM return_date + i) BETWEEN 6 AND 9 THEN --ljeto
             IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN 
-                fine := fine + 30; --radni dani
+                fine := fine + 0.3; --radni dani
             ELSE
-                fine := fine + 20; --vikend
+                fine := fine + 0.2; --vikend
             END IF;
         ELSE -- ostatak godine
             IF genre = 'lektira' THEN
-                fine := fine + 50;
+                fine := fine + 0.5;
             ELSE
                 IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
-                    fine := fine + 40; -- radni dani
+                    fine := fine + 0.4; -- radni dani
                 ELSE
-                    fine := fine + 20; -- vikend
+                    fine := fine + 0.2; -- vikend
                 END IF;
             END IF;
         END IF;
@@ -65,6 +65,19 @@ BEGIN
     UPDATE BookLoans SET CostOfFine = fine WHERE BookLoanID = book_loan_id;
 END;
 $$;
+
+-- PROCEDURA KOJA PROVJERAVA POZIVA PRETHODNU PROCEDURU ZA SVAKU POSUDBU
+CREATE OR REPLACE FUNCTION LoopThroughBookLoans() RETURNS VOID 
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+   t_row BookLoans%rowtype;
+BEGIN
+ FOR t_row in (SELECT * FROM BookLoans) LOOP
+ 	CALL CheckLoanExpiryAndUpdateFine(t_row.BookLoanID);
+ END LOOP;
+END;
+$$; -- SELECT LoopThroughBookLoans(); -> poziv procedure
 
 --PROCEDURA ZA PRODUŽENJE POSUDBE
 CREATE OR REPLACE PROCEDURE ExtendLoan(book_loan_id INT)
