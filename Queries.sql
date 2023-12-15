@@ -107,7 +107,30 @@ JOIN Authors a ON ba.AuthorID = a.AuthorID
 JOIN Countries c ON a.CountryID = c.CountryID
 WHERE b.PublishDate > (SELECT MIN(b.PublishDate) FROM Books b)
 
+--knjige i broj aktivnih posudbi, gdje se one s manje od 10 aktivnih ne prikazuju
+SELECT b.Title, COUNT(*) as NumberOfActiveLoans
+FROM Books b
+JOIN BookLoans bl ON b.BookID = bl.BookID
+WHERE bl.IsReturned = false
+GROUP BY b.Title
+HAVING COUNT(*) > 10
+ORDER BY NumberOfActiveLoans DESC
+
+--prosječan broj posudbi po primjerku knjige po svakoj državi
+SELECT DISTINCT b.Title, c.CountryName, COUNT(*) as NumberOfLoans
+FROM BookLoans bl
+JOIN Books b ON bl.BookID = b.BookID
+JOIN BookAuthors ba ON b.BookID = ba.BookID
+JOIN Authors a ON ba.AuthorID = a.AuthorID
+JOIN Countries c ON a.CountryID = c.CountryID
+GROUP BY c.CountryName
+ORDER BY NumberOfLoans DESC
 
 
+--broj autora (koji su objavili više od 5 knjiga) po struci, desetljeću rođenja i spolu; 
+--u slučaju da je broj autora manji od 10, ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
+
+
+--10 najbogatijih autora, ako po svakoj knjizi dobije: sqrt(brojPrimjeraka)/brojAutoraPoKnjizi €
 
 
