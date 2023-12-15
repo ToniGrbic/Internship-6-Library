@@ -64,6 +64,12 @@ CREATE TABLE BookAuthors (
     PRIMARY KEY (BookID, AuthorID)
 );
 
+CREATE TABLE BookCopies (
+    BookCopyID SERIAL NOT NULL PRIMARY KEY,
+    BookID INT REFERENCES Books(BookID),
+    IsAvailable BOOLEAN NOT NULL
+);
+
 ALTER TABLE BookAuthors
     ADD CONSTRAINT CHK_AuthorType CHECK 
     (AuthorType IN 
