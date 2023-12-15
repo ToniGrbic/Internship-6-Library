@@ -127,10 +127,24 @@ GROUP BY c.CountryName
 ORDER BY NumberOfLoans DESC
 
 
---broj autora (koji su objavili više od 5 knjiga) po struci, desetljeću rođenja i spolu; 
+--broj autora koji su objavili više od 5 knjiga po struci, desetljeću rođenja i spolu; 
 --u slučaju da je broj autora manji od 10, ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
+
 
 
 --10 najbogatijih autora, ako po svakoj knjizi dobije: sqrt(brojPrimjeraka)/brojAutoraPoKnjizi €
 
-
+SELECT 
+    a.AuthorID, 
+    a.FirstName, 
+    a.LastName, 
+    SUM(sqrt(bc.Number_Of_Copies) / COUNT(ba.AuthorID)) AS Earnings
+FROM Authors a
+JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
+JOIN Books b ON ba.BookID = b.BookID
+JOIN (SELECT BookID, COUNT(*) as Number_Of_Copies FROM BookCopies 
+	  GROUP BY BookID) bc ON b.BookID = bc.BookID
+GROUP BY a.AuthorID, a.FirstName, a.LastName
+ORDER BY 
+    Earnings DESC
+LIMIT 10;
