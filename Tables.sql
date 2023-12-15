@@ -83,12 +83,9 @@ CREATE TABLE BookLoans (
     UserID INT REFERENCES Users(UserID),
     IsExtendedLoan BOOLEAN NOT NULL,
     IsReturned BOOLEAN NOT NULL,
-    CostOfFine FLOAT NOT NULL
+    CostOfFine FLOAT
 );
 
-ALTER TABLE BookLoans
-ADD CONSTRAINT CHK_Loan_Return_Date 
-CHECK (ReturnDate >= LoanDate);
 
 
 
