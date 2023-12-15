@@ -35,13 +35,13 @@ CREATE TABLE Authors (
     LastName VARCHAR(50) NOT NULL,
     DateOfBirth DATE NOT NULL,
     IsAlive BOOLEAN NOT NULL,
-    Gender VARCHAR(50) NOT NULL,
+    Gender VARCHAR(50),
     CountryID INT REFERENCES Countries(CountryID) 
 );
 
 ALTER TABLE Authors
     ADD CONSTRAINT CHK_Gender CHECK
-    (Gender IN ('MUŠKO', 'ŽENSKO', 'NEPOZNATO', 'OSTALO'));
+    (Gender IN ('MUŠKO', 'ŽENSKO', 'OSTALO'));
 
 CREATE TABLE Books (
     BookID SERIAL NOT NULL PRIMARY KEY,
