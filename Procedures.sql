@@ -1,23 +1,27 @@
 --PROCEDURA ZA POSUDBU KNJIGE
-CREATE OR REPLACE PROCEDURE BorrowBook(book_id INT, user_id INT)
+CREATE OR REPLACE PROCEDURE BorrowBook(copy_id INT, user_id INT)
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    loan_date DATE := CURRENT_DATE;
-    return_date DATE := loan_date + INTERVAL '20 days';
+    Loan_date DATE := CURRENT_DATE;
+    ReturnDate DATE := loan_date + INTERVAL '20 days';
+    last_book_loan_id INT;
+    book_loan_id INT;
 BEGIN
+    SELECT MAX(BookLoanID) INTO last_book_loan_id FROM BookLoans;
+    book_loan_id := last_book_loan_id + 1;
     CASE
-        WHEN NOT EXISTS (SELECT * FROM Books WHERE BookID = book_id) THEN
+        WHEN NOT EXISTS (SELECT * FROM BookCopies WHERE CopyID = copy_id) THEN
             RAISE EXCEPTION 'Specified book does not exist';
         WHEN NOT EXISTS (SELECT * FROM Users WHERE UserID = user_id) THEN
             RAISE EXCEPTION 'Specified user does not exist';
-        WHEN EXISTS (SELECT * FROM BookLoans WHERE BookID = book_id AND IsReturned = false) THEN
+        WHEN EXISTS (SELECT * FROM BookLoans WHERE CopyID = copy_id AND IsReturned = false) THEN
             RAISE EXCEPTION 'Book is already borrowed';
         WHEN (SELECT COUNT(*) FROM BookLoans WHERE UserID = user_id AND IsReturned = false) >= 3 THEN
             RAISE EXCEPTION 'User has already borrowed 3 books';
         ELSE
-            INSERT INTO BookLoans (LoanDate, ReturnDate, BookID, UserID, IsExtendedLoan, IsReturned, CostOfFine)
-            VALUES (loan_date, return_date, book_id, user_id, false, false, 0);
+            INSERT INTO BookLoans (BookLoanID, loan_date, return_date, CopyID, UserID, IsExtendedLoan, IsReturned, CostOfFine)
+            VALUES (book_loan_id, Loan_date, ReturnDate, copy_id, user_id, false, false, 0);
     END CASE;
 END;
 $$;
@@ -27,24 +31,24 @@ CREATE OR REPLACE PROCEDURE CheckLoanExpiryAndUpdateFine(book_loan_id INT)
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    book_id INT;
-    return_date DATE;
-    current_date DATE := CURRENT_DATE;
+    copy_id INT;
+    ReturnDate DATE;
+    CurrentDate DATE := CURRENT_DATE;
     genre VARCHAR(50);
-    fine REAL := 0;
+    fine NUMERIC := 0;
     days INT;
 BEGIN
-    SELECT BookID, ReturnDate, Genre INTO book_id, return_date, genre FROM BookLoans WHERE BookLoanID = book_loan_id;
+    SELECT CopyID, return_date, Genre INTO copy_id, ReturnDate, genre FROM BookLoans WHERE BookLoanID = book_loan_id;
 
-    IF return_date >= current_date THEN
+    IF ReturnDate >= CurrentDate THEN
         RETURN;
     END IF;
 
-    days := current_date - return_date;
+    days := CurrentDate - ReturnDate;
 
     FOR i IN 1..days LOOP
-        IF EXTRACT(MONTH FROM return_date + i) BETWEEN 6 AND 9 THEN --ljeto
-            IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN 
+        IF EXTRACT(MONTH FROM ReturnDate + i) BETWEEN 6 AND 9 THEN --ljeto
+            IF EXTRACT(DOW FROM ReturnDate + i) BETWEEN 1 AND 5 THEN 
                 fine := fine + 0.3; --radni dani
             ELSE
                 fine := fine + 0.2; --vikend
@@ -53,7 +57,7 @@ BEGIN
             IF genre = 'lektira' THEN
                 fine := fine + 0.5;
             ELSE
-                IF EXTRACT(DOW FROM return_date + i) BETWEEN 1 AND 5 THEN
+                IF EXTRACT(DOW FROM ReturnDate + i) BETWEEN 1 AND 5 THEN
                     fine := fine + 0.4; -- radni dani
                 ELSE
                     fine := fine + 0.2; -- vikend
@@ -66,8 +70,8 @@ BEGIN
 END;
 $$;
 
--- PROCEDURA KOJA PROVJERAVA POZIVA PRETHODNU PROCEDURU ZA SVAKU POSUDBU
-CREATE OR REPLACE FUNCTION LoopThroughBookLoans() RETURNS VOID 
+-- PROCEDURA KOJA POZIVA PRETHODNU PROCEDURU ZA SVAKU POSUDBU
+CREATE OR REPLACE FUNCTION UpdateEachBookLoan() RETURNS VOID 
 LANGUAGE plpgsql
 AS $$
 DECLARE 
@@ -77,21 +81,22 @@ BEGIN
  	CALL CheckLoanExpiryAndUpdateFine(t_row.BookLoanID);
  END LOOP;
 END;
-$$; -- SELECT LoopThroughBookLoans(); -> poziv procedure
+$$; -- SELECT UpdateEachBookLoan(); -> poziv procedure
 
 --PROCEDURA ZA PRODUŽENJE POSUDBE
 CREATE OR REPLACE PROCEDURE ExtendLoan(book_loan_id INT)
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    return_date DATE;
-    current_date DATE := CURRENT_DATE;
+    ReturnDate DATE;
+    CurrentDate DATE := CURRENT_DATE;
 BEGIN
-    SELECT ReturnDate INTO return_date FROM BookLoans WHERE BookLoanID = book_loan_id;
+    SELECT return_date INTO ReturnDate FROM BookLoans WHERE BookLoanID = book_loan_id;
 
-    IF return_date < current_date THEN
+    IF ReturnDate < CurrentDate THEN
         RAISE EXCEPTION 'Loan has expired';
     END IF;
 
-    UPDATE BookLoans SET ReturnDate = return_date + INTERVAL '40 days', IsExtendedLoan = true WHERE BookLoanID = book_loan_id;
+    UPDATE BookLoans SET return_date = ReturnDate + INTERVAL '40 days', IsExtendedLoan = true WHERE BookLoanID = book_loan_id;
 END;
+$$;
