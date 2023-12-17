@@ -15,7 +15,8 @@ JOIN Countries c ON c.CountryID = a.CountryID
 SELECT 
     b.Title,
     b.PublishDate,
-    CONCAT(CONCAT(a.LastName, ' ', LEFT(a.FirstName, 1)),'','.')
+    CONCAT(CONCAT(a.LastName, ' ', LEFT(a.FirstName, 1)),'','.') 
+	as Authors
 FROM Books b
 JOIN BookAuthors ba ON b.BookID = ba.BookID
 JOIN Authors a ON ba.AuthorID = a.AuthorID
@@ -25,28 +26,35 @@ WHERE ba.AuthorType = 'glavni'
 -- sve kombinacije (naslova) knjiga i posudbi istih u prosincu 2023.; 
 --u slučaju da neka nije ni jednom posuđena u tom periodu, prikaži je samo jednom 
 --(a na mjestu posudbe neka piše null)
-SELECT b.Title,
-(CASE 
-	WHEN DATE_PART('year',bl.LoanDate) = 2023 AND DATE_PART('month',bl.LoanDate) = 12
-	THEN bl.LoanDate
-	ELSE NULL 
- END) as LoanDate
-FROM BookLoans bl
-JOIN Books b on bl.BookID = b.BookID
-ORDER BY bl.LoanDate DESC
+SELECT 
+    b.Title,
+    (CASE 
+        WHEN DATE_PART('year', bl.loan_date) = 2023 AND DATE_PART('month', bl.loan_date) = 12
+        THEN bl.loan_date
+        ELSE NULL 
+     END) as loan_date
+FROM Books b
+JOIN BookCopies bc ON b.BookID = bc.BookID
+JOIN BookLoans bl ON bc.CopyID = bl.CopyID
+ORDER BY bl.loan_date DESC;
 
 
 --top 3 knjižnice s najviše primjeraka knjiga
-SELECT COUNT(*) FROM Books b
-GROUP BY b.LibraryID
+SELECT l.LibraryID, COUNT(*) as NumberOfBooks FROM BookCopies bc
+JOIN Libraries l ON bc.LibraryID = l.LibraryID
+GROUP BY bc.LibraryID, l.LibraryID
 limit 3
 
+
 --po svakoj knjizi broj ljudi koji su je pročitali (korisnika koji posudili bar jednom)
-SELECT b.Title, COUNT(*) as NumberOfReaders 
-FROM BookLoans bl
-JOIN Books b ON bl.BookID = b.BookID
-GROUP BY b.BookID
-ORDER BY NumberOfReaders DESC	
+SELECT 
+    b.Title, 
+    COUNT(DISTINCT bl.UserID) as NumberOfReaders 
+FROM Books b
+JOIN BookCopies bc ON b.BookID = bc.BookID
+JOIN BookLoans bl ON bc.CopyID = bl.CopyID
+GROUP BY b.BookID, b.Title
+ORDER BY NumberOfReaders DESC;
 
 --imena svih korisnika koji imaju trenutno posuđenu knjigu
 SELECT DISTINCT u.FirstName, u.LastName
@@ -63,7 +71,7 @@ WHERE b.PublishDate BETWEEN '2019-01-01' AND '2022-12-31'
 
 --ime države i broj umjetničkih knjiga po svakoj (ako su dva autora iz iste države, 
 --računa se kao jedna knjiga), gdje su države sortirane po broju živih autora od najveće ka najmanjoj
-SELECT c.CountryName, COUNT(*) as NumberOfArtBooks
+SELECT DISTINCT c.CountryName, COUNT(*) as NumberOfArtBooks
 FROM Authors a
 JOIN Countries c ON a.CountryID = c.CountryID
 JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
@@ -73,13 +81,18 @@ GROUP BY c.CountryName
 ORDER BY (SELECT COUNT(*) FROM Authors a WHERE a.IsAlive = true) DESC
 
 --po svakoj kombinaciji autora i žanra (ukoliko postoji) broj posudbi knjiga tog autora u tom žanru
-SELECT a.FirstName, a.LastName, b.Genre, COUNT(*) as NumberOfLoans
+SELECT 
+    a.FirstName, 
+    a.LastName, 
+    b.Genre, 
+    COUNT(*) as NumberOfLoans
 FROM Authors a
 JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
 JOIN Books b ON ba.BookID = b.BookID
-JOIN BookLoans bl ON b.BookID = bl.BookID
+JOIN BookCopies bc ON b.BookID = bc.BookID
+JOIN BookLoans bl ON bc.CopyID = bl.CopyID
 GROUP BY a.FirstName, a.LastName, b.Genre
-ORDER BY NumberOfLoans DESC
+ORDER BY NumberOfLoans DESC;
 
 --po svakom članu koliko trenutno duguje zbog kašnjenja; u slučaju da ne duguje ispiši “ČISTO”
 SELECT DISTINCT u.FirstName, u.LastName,
@@ -106,29 +119,35 @@ JOIN BookAuthors ba ON b.BookID = ba.BookID
 JOIN Authors a ON ba.AuthorID = a.AuthorID
 JOIN Countries c ON a.CountryID = c.CountryID
 WHERE b.PublishDate > (SELECT MIN(b.PublishDate) FROM Books b)
+GROUP BY c.CountryName, b.Title
 
 --knjige i broj aktivnih posudbi, gdje se one s manje od 10 aktivnih ne prikazuju
-SELECT b.Title, COUNT(*) as NumberOfActiveLoans
+SELECT 
+    b.Title, 
+    COUNT(*) as NumberOfActiveLoans
 FROM Books b
-JOIN BookLoans bl ON b.BookID = bl.BookID
+JOIN BookCopies bc ON b.BookID = bc.BookID
+JOIN BookLoans bl ON bc.CopyID = bl.CopyID
 WHERE bl.IsReturned = false
 GROUP BY b.Title
-HAVING COUNT(*) > 10
-ORDER BY NumberOfActiveLoans DESC
+HAVING COUNT(*) > 10 -- ispisuje do 4 trenutno nemam dovoljno unesenih bookloans
+ORDER BY NumberOfActiveLoans DESC;
 
 --prosječan broj posudbi po primjerku knjige po svakoj državi
-SELECT DISTINCT b.Title, c.CountryName, COUNT(*) as NumberOfLoans
-FROM BookLoans bl
-JOIN Books b ON bl.BookID = b.BookID
-JOIN BookAuthors ba ON b.BookID = ba.BookID
-JOIN Authors a ON ba.AuthorID = a.AuthorID
-JOIN Countries c ON a.CountryID = c.CountryID
+-- pomogao chatGPT, radi ali izgleda ruzno, vjerovatno moze bolje 
+SELECT 
+    c.CountryName, 
+    COUNT(bl.CopyID) / COUNT(DISTINCT bc.CopyID) as AverageLoansPerCopy
+FROM Countries c
+JOIN Authors a ON c.CountryID = a.CountryID
+JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
+JOIN Books b ON ba.BookID = b.BookID
+JOIN BookCopies bc ON b.BookID = bc.BookID
+JOIN BookLoans bl ON bc.CopyID = bl.CopyID
 GROUP BY c.CountryName
-ORDER BY NumberOfLoans DESC
+ORDER BY AverageLoansPerCopy DESC;
 
-
---broj autora koji su objavili više od 5 knjiga po struci, desetljeću rođenja i spolu; 
---u slučaju da je broj autora manji od 10, ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
+--select query za broj autora koji su objavili više od 5 knjiga po struci, desetljeću rođenja i spolu, u slučaju da je broj autora manji od 10, ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
 
 
 
@@ -138,7 +157,7 @@ SELECT
     a.AuthorID, 
     a.FirstName, 
     a.LastName, 
-    SUM(sqrt(bc.Number_Of_Copies) / COUNT(ba.AuthorID)) AS Earnings
+    sqrt(bc.Number_Of_Copies) / COUNT(ba.AuthorID) AS Earnings
 FROM Authors a
 JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
 JOIN Books b ON ba.BookID = b.BookID
