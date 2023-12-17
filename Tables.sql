@@ -48,8 +48,7 @@ CREATE TABLE Books (
     Title VARCHAR(50) NOT NULL,
     Genre VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
-    PublishDate DATE NOT NULL,
-    LibraryID INT REFERENCES Libraries(LibraryID)
+    PublishDate DATE NOT NULL
 );
 
 ALTER TABLE Books
@@ -65,9 +64,9 @@ CREATE TABLE BookAuthors (
 );
 
 CREATE TABLE BookCopies (
-    BookCopyID SERIAL NOT NULL PRIMARY KEY,
+    CopyID SERIAL NOT NULL PRIMARY KEY,
     BookID INT REFERENCES Books(BookID),
-    IsAvailable BOOLEAN NOT NULL
+    LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
 ALTER TABLE BookAuthors
@@ -85,7 +84,7 @@ CREATE TABLE BookLoans (
     BookLoanID SERIAL NOT NULL PRIMARY KEY,
     LoanDate DATE NOT NULL,
     ReturnDate DATE NOT NULL,
-    BookID INT REFERENCES Books(BookID),
+    CopyID INT REFERENCES BookCopies(BookCopyID),
     UserID INT REFERENCES Users(UserID),
     IsExtendedLoan BOOLEAN NOT NULL,
     IsReturned BOOLEAN NOT NULL,
