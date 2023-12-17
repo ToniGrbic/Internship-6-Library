@@ -134,7 +134,7 @@ HAVING COUNT(*) > 10 -- ispisuje do 4 trenutno nemam dovoljno unesenih bookloans
 ORDER BY NumberOfActiveLoans DESC;
 
 --prosječan broj posudbi po primjerku knjige po svakoj državi
--- pomogao chatGPT, radi ali izgleda ruzno, vjerovatno moze bolje 
+-- pomogao chatGPT, vjerovatno moze bolje 
 SELECT 
     c.CountryName, 
     COUNT(bl.CopyID) / COUNT(DISTINCT bc.CopyID) as AverageLoansPerCopy
@@ -147,23 +147,34 @@ JOIN BookLoans bl ON bc.CopyID = bl.CopyID
 GROUP BY c.CountryName
 ORDER BY AverageLoansPerCopy DESC;
 
---select query za broj autora koji su objavili više od 5 knjiga po struci, desetljeću rođenja i spolu, u slučaju da je broj autora manji od 10, ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
-
-
+--select query za broj autora koji su objavili više od 5 knjiga po struci, desetljeću rođenja i spolu, u slučaju da je broj autora manji od 10, 
+--ne prikazuj kategoriju; poredaj prikaz po desetljeću rođenja
+SELECT DISTINCT b.Genre, COUNT(*) as NumberOfAuthors, EXTRACT(DECADE FROM a.DateOfBirth) as DecadeOfBirth
+FROM Authors a
+JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
+JOIN Books b ON ba.BookID = b.BookID
+GROUP BY b.Genre, DecadeOfBirth
+HAVING COUNT(*) > 5
 
 --10 najbogatijih autora, ako po svakoj knjizi dobije: sqrt(brojPrimjeraka)/brojAutoraPoKnjizi €
-
+--pomogao chatgpt, vrijednost TotalMoney mi se cini premala vjerovatno je krivo, 
+--vjerovatno ima bolje rjesenje
 SELECT 
     a.AuthorID, 
     a.FirstName, 
     a.LastName, 
-    sqrt(bc.Number_Of_Copies) / COUNT(ba.AuthorID) AS Earnings
+    (SUM(SQRT(bc.NumCopies)/ba.NumAuthors)) as TotalMoney
 FROM Authors a
-JOIN BookAuthors ba ON a.AuthorID = ba.AuthorID
-JOIN Books b ON ba.BookID = b.BookID
-JOIN (SELECT BookID, COUNT(*) as Number_Of_Copies FROM BookCopies 
-	  GROUP BY BookID) bc ON b.BookID = bc.BookID
+JOIN (
+    SELECT AuthorID, BookID, COUNT(*) as NumAuthors
+    FROM BookAuthors
+    GROUP BY AuthorID, BookID
+) ba ON a.AuthorID = ba.AuthorID
+JOIN (
+    SELECT BookID, COUNT(*) as NumCopies
+    FROM BookCopies
+    GROUP BY BookID
+) bc ON ba.BookID = bc.BookID
 GROUP BY a.AuthorID, a.FirstName, a.LastName
-ORDER BY 
-    Earnings DESC
-LIMIT 10;
+ORDER BY TotalMoney DESC
+
