@@ -1,19 +1,19 @@
+CREATE TABLE Libraries (
+    LibraryID SERIAL NOT NULL PRIMARY KEY,
+    LibraryName VARCHAR(50) NOT NULL
+);
+
 CREATE TABLE WorkingHours (
     WorkingHoursID SERIAL NOT NULL PRIMARY KEY,
     DayOfWeek INT NOT NULL,
     OpenTime TIME NOT NULL,
-    CloseTime TIME NOT NULL
+    CloseTime TIME NOT NULL,
     LibraryID INT REFERENCES Libraries(LibraryID)
 );
 
 ALTER TABLE WorkingHours
     ADD CONSTRAINT CHK_DayOfWeek 
     CHECK (DayOfWeek BETWEEN 1 AND 7);
-
-CREATE TABLE Libraries (
-    LibraryID SERIAL NOT NULL PRIMARY KEY,
-    LibraryName VARCHAR(50) NOT NULL
-);
 
 CREATE TABLE Librarians (
     LibrarianID SERIAL NOT NULL PRIMARY KEY,
@@ -45,7 +45,7 @@ ALTER TABLE Authors
 
 CREATE TABLE Books (
     BookID SERIAL NOT NULL PRIMARY KEY,
-    Title VARCHAR(50) NOT NULL,
+    Title VARCHAR(120) NOT NULL,
     Genre VARCHAR(50) NOT NULL,
     ISBN VARCHAR(50) NOT NULL,
     PublishDate DATE NOT NULL
@@ -84,7 +84,7 @@ CREATE TABLE BookLoans (
     BookLoanID SERIAL NOT NULL PRIMARY KEY,
     LoanDate DATE NOT NULL,
     ReturnDate DATE NOT NULL,
-    CopyID INT REFERENCES BookCopies(BookCopyID),
+    CopyID INT REFERENCES BookCopies(CopyID),
     UserID INT REFERENCES Users(UserID),
     IsExtendedLoan BOOLEAN NOT NULL,
     IsReturned BOOLEAN NOT NULL,
