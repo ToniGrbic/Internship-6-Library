@@ -1,3 +1,4 @@
+--samo manji dio, u backupu ima 10000 redaka
 insert into BookCopies (CopyID, BookID, LibraryID) values (1, '955', '15');
 insert into BookCopies (CopyID, BookID, LibraryID) values (2, '90', '1');
 insert into BookCopies (CopyID, BookID, LibraryID) values (3, '818', '41');
