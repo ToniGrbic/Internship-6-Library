@@ -70,10 +70,6 @@ CREATE TABLE BookCopies (
 );
 
 --index da bi ubrzalo querije za BookID na BookCopies, ima ih puno u odnosu na ostale tablice
--- npr. ovaj query je ubrzan sa 147ms na 7ms sa index:
--- explain analyze SELECT BookID, COUNT(*) as NumCopies
-    --FROM BookCopies
-    --GROUP BY BookID
 CREATE INDEX BookIDs on BookCopies(BookID)
 
 ALTER TABLE BookAuthors
@@ -97,6 +93,9 @@ CREATE TABLE BookLoans (
     IsReturned BOOLEAN NOT NULL,
     CostOfFine FLOAT
 );
+
+--index za ubrzavanje querija za CopyID na BookLoans
+CREATE INDEX CopyIDs on BookLoans(CopyID)
 
 
 
