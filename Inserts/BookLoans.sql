@@ -1,3 +1,4 @@
+-- samo dio, u backupu ima 7000 redaka za BookLoans
 insert into BookLoans (BookLoanID, loan_date, return_date, CopyID, UserID, isReturned, IsExtendedLoan, CostOfFine) values (1, '2020-04-10', '2022-10-17', '516', '492', false, true, 0.0);
 insert into BookLoans (BookLoanID, loan_date, return_date, CopyID, UserID, isReturned, IsExtendedLoan, CostOfFine) values (2, '2018-11-03', '2020-06-01', '251', '199', false, true, 0.0);
 insert into BookLoans (BookLoanID, loan_date, return_date, CopyID, UserID, isReturned, IsExtendedLoan, CostOfFine) values (3, '2016-04-09', '2020-12-01', '268', '70', false, false, 0.0);

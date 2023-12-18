@@ -130,7 +130,7 @@ JOIN BookCopies bc ON b.BookID = bc.BookID
 JOIN BookLoans bl ON bc.CopyID = bl.CopyID
 WHERE bl.IsReturned = false
 GROUP BY b.Title
-HAVING COUNT(*) > 10 -- ispisuje do 4 trenutno nemam dovoljno unesenih bookloans
+HAVING COUNT(*) > 10 
 ORDER BY NumberOfActiveLoans DESC;
 
 --prosječan broj posudbi po primjerku knjige po svakoj državi
@@ -157,8 +157,7 @@ GROUP BY b.Genre, DecadeOfBirth
 HAVING COUNT(*) > 5
 
 --10 najbogatijih autora, ako po svakoj knjizi dobije: sqrt(brojPrimjeraka)/brojAutoraPoKnjizi €
---pomogao chatgpt, vrijednost TotalMoney mi se cini premala vjerovatno je krivo, 
---vjerovatno ima bolje rjesenje
+--pomogao chatgpt, nakon dodavanja 10k redova u BookCopies TotalMoney se povecava ali ne drasticno jer sam insertao 1000 Autora
 SELECT 
     a.AuthorID, 
     a.FirstName, 
