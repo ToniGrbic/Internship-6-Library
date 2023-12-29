@@ -84,20 +84,17 @@ END;
 $$; -- SELECT UpdateEachBookLoan(); -> poziv procedure
 
 --PROCEDURA ZA PRODUŽENJE POSUDBE
--- ima bug kada procedura udpate return date, da delete taj row sa unesenim book_loan_id
--- nisam nasao razlog zasto
 CREATE OR REPLACE PROCEDURE ExtendLoan(book_loan_id INT)
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    is_returned BOOLEAN;
     ReturnDate DATE;
-    CurrentDate DATE := CURRENT_DATE;
+    current_date DATE := CURRENT_DATE;
 BEGIN
-    SELECT return_date, IsReturned INTO ReturnDate, is_returned FROM BookLoans WHERE BookLoanID = book_loan_id;
+    SELECT return_date INTO ReturnDate FROM BookLoans WHERE BookLoanID = book_loan_id;
 
-    IF is_returned = true THEN
-        RAISE EXCEPTION 'Loan is returned';
+    IF ReturnDate < current_date THEN
+        RAISE EXCEPTION 'Loan has expired';
     END IF;
 
     UPDATE BookLoans SET return_date = ReturnDate + INTERVAL '40 days', IsExtendedLoan = true WHERE BookLoanID = book_loan_id;
